@@ -1,6 +1,6 @@
 <template>
   <div class="panel" :style="{ flex: flex }">
-    <div class="panel-hd">
+    <div v-if="showTitle" class="panel-hd">
       <span class="panel-title">{{ title }}</span>
       <span v-if="badge" class="panel-badge">{{ badge }}</span>
     </div>
@@ -13,11 +13,12 @@ import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
 
 const props = defineProps({
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   badge: { type: String, default: '' },
   flex: { type: [String, Number], default: 1 },
   option: { type: Object, default: null },
-  watchData: { type: Boolean, default: true }
+  watchData: { type: Boolean, default: true },
+  showTitle: { type: Boolean, default: true }
 })
 
 const chartRef = ref(null)
