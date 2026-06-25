@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.RegionHouseCountMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.RegionHouseCount">
+        SELECT id, neighbourhood_cleansed, house_count
+        FROM region_house_count
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND neighbourhood_cleansed LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.neighbourhoodCleansed != null and param.neighbourhoodCleansed != ''">
+                AND neighbourhood_cleansed LIKE CONCAT('%', #{param.neighbourhoodCleansed}, '%')
+            </if>
+            <if test="param.houseCount != null">
+                AND house_count = #{param.houseCount}
+            </if>
+        </where>
+        ORDER BY house_count DESC, id DESC
+    </select>
+
+</mapper>

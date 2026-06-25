@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.MonthlyReviewTrendMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.MonthlyReviewTrend">
+        SELECT id, review_month, review_count
+        FROM monthly_review_trend
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND review_month LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.reviewMonth != null and param.reviewMonth != ''">
+                AND review_month LIKE CONCAT('%', #{param.reviewMonth}, '%')
+            </if>
+            <if test="param.reviewCount != null">
+                AND review_count = #{param.reviewCount}
+            </if>
+        </where>
+        ORDER BY review_month ASC, id DESC
+    </select>
+
+</mapper>

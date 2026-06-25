@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.CalendarPriceTrendMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.CalendarPriceTrend">
+        SELECT id, stat_month, avg_price, sample_count
+        FROM calendar_price_trend
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND stat_month LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.statMonth != null and param.statMonth != ''">
+                AND stat_month LIKE CONCAT('%', #{param.statMonth}, '%')
+            </if>
+            <if test="param.avgPrice != null">
+                AND avg_price = #{param.avgPrice}
+            </if>
+            <if test="param.sampleCount != null">
+                AND sample_count = #{param.sampleCount}
+            </if>
+        </where>
+        ORDER BY stat_month ASC, id DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.PriceReviewRelationMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.PriceReviewRelation">
+        SELECT id, listing_id, neighbourhood_cleansed, room_type, price, number_of_reviews, review_scores_rating
+        FROM price_review_relation
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND (
+                    neighbourhood_cleansed LIKE CONCAT('%', #{param.keyword}, '%')
+                    OR room_type LIKE CONCAT('%', #{param.keyword}, '%')
+                )
+            </if>
+            <if test="param.neighbourhoodCleansed != null and param.neighbourhoodCleansed != ''">
+                AND neighbourhood_cleansed LIKE CONCAT('%', #{param.neighbourhoodCleansed}, '%')
+            </if>
+            <if test="param.roomType != null and param.roomType != ''">
+                AND room_type LIKE CONCAT('%', #{param.roomType}, '%')
+            </if>
+            <if test="param.listingId != null">
+                AND listing_id = #{param.listingId}
+            </if>
+            <if test="param.price != null">
+                AND price = #{param.price}
+            </if>
+            <if test="param.numberOfReviews != null">
+                AND number_of_reviews = #{param.numberOfReviews}
+            </if>
+            <if test="param.reviewScoresRating != null">
+                AND review_scores_rating = #{param.reviewScoresRating}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+</mapper>

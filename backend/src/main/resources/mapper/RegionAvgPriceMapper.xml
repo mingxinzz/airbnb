@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.RegionAvgPriceMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.RegionAvgPrice">
+        SELECT id, neighbourhood_cleansed, avg_price, min_price, max_price, house_count
+        FROM region_avg_price
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND neighbourhood_cleansed LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.neighbourhoodCleansed != null and param.neighbourhoodCleansed != ''">
+                AND neighbourhood_cleansed LIKE CONCAT('%', #{param.neighbourhoodCleansed}, '%')
+            </if>
+            <if test="param.avgPrice != null">
+                AND avg_price = #{param.avgPrice}
+            </if>
+            <if test="param.minPrice != null">
+                AND min_price = #{param.minPrice}
+            </if>
+            <if test="param.maxPrice != null">
+                AND max_price = #{param.maxPrice}
+            </if>
+            <if test="param.houseCount != null">
+                AND house_count = #{param.houseCount}
+            </if>
+        </where>
+        ORDER BY avg_price DESC, id DESC
+    </select>
+
+</mapper>

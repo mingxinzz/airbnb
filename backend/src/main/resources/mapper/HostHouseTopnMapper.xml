@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.HostHouseTopnMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.HostHouseTopn">
+        SELECT id, host_id, host_name, house_count
+        FROM host_house_topn
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND host_name LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.hostName != null and param.hostName != ''">
+                AND host_name LIKE CONCAT('%', #{param.hostName}, '%')
+            </if>
+            <if test="param.hostId != null">
+                AND host_id = #{param.hostId}
+            </if>
+            <if test="param.houseCount != null">
+                AND house_count = #{param.houseCount}
+            </if>
+        </where>
+        ORDER BY house_count DESC, id DESC
+    </select>
+
+</mapper>

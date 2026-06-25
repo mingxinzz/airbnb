@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.guet.airbnb.mapper.RoomTypeRatioMapper">
+
+    <select id="selectPage" resultType="cn.guet.airbnb.entity.RoomTypeRatio">
+        SELECT id, room_type, house_count, ratio
+        FROM room_type_ratio
+        <where>
+            <if test="param.keyword != null and param.keyword != ''">
+                AND room_type LIKE CONCAT('%', #{param.keyword}, '%')
+            </if>
+            <if test="param.roomType != null and param.roomType != ''">
+                AND room_type LIKE CONCAT('%', #{param.roomType}, '%')
+            </if>
+            <if test="param.houseCount != null">
+                AND house_count = #{param.houseCount}
+            </if>
+            <if test="param.ratio != null">
+                AND ratio = #{param.ratio}
+            </if>
+        </where>
+        ORDER BY house_count DESC, id DESC
+    </select>
+
+</mapper>
