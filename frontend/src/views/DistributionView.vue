@@ -7,10 +7,20 @@
     <div class="pg-body">
       <div class="grid cols-2r1" style="flex:1">
         <div class="col">
-          <ChartPanel title="各区域房源数量分布" :option="barChartOption" />
+          <div class="panel" style="flex:1">
+            <div class="panel-hd">
+              <span class="panel-title">各区域房源数量分布</span>
+              <div class="pagination" v-if="totalPages > 1">
+                <button class="pg-btn" :disabled="currentPage <= 1" @click="currentPage--">‹</button>
+                <span class="pg-info">{{ currentPage }} / {{ totalPages }}</span>
+                <button class="pg-btn" :disabled="currentPage >= totalPages" @click="currentPage++">›</button>
+              </div>
+            </div>
+            <ChartPanel title="" :option="barChartOption" :showTitle="false" style="flex:1" />
+          </div>
         </div>
         <div class="col">
-          <div class="panel" style="flex:1">
+          <div class="panel" style="flex:1; overflow: hidden;">
             <div class="panel-hd"><span class="panel-title">区域房源数量排行</span></div>
             <DataTable :columns="tableColumns" :data="tableData">
               <template #cell-rankingNo="{ index }">
@@ -54,12 +64,21 @@ const tableColumns = [
 
 const tableData = computed(() => sortedData.value)
 
+// 柱状图分页
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = computed(() => Math.ceil(regionData.value.length / pageSize.value))
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return sortedData.value.slice(start, start + pageSize.value)
+})
+
 const barChartOption = computed(() => ({
   tooltip: tooltipConfig(),
   grid: { left: '3%', right: '6%', bottom: '8%', top: '8%', containLabel: true },
   xAxis: {
     type: 'category',
-    data: regionData.value.map(d => d.neighbourhoodCleansed),
+    data: paginatedData.value.map(d => d.neighbourhoodCleansed),
     axisLabel: { ...axisLabelStyle(14), rotate: 45 },
     axisLine: axisLineStyle()
   },
@@ -72,13 +91,13 @@ const barChartOption = computed(() => ({
   },
   series: [{
     type: 'bar',
-    data: regionData.value.map((d, i) => ({
+    data: paginatedData.value.map((d, i) => ({
       value: d.houseCount,
       itemStyle: {
         color: {
           type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [
-            { offset: 0, color: paletteColor(i) },
+            { offset: 0, color: paletteColor((currentPage.value - 1) * pageSize.value + i) },
             { offset: 1, color: 'rgba(0,0,0,0.15)' }
           ]
         },
@@ -120,6 +139,17 @@ onMounted(async () => {
 
 .rnk { color: var(--accent); font-weight: 600; }
 .val { text-align: right; font-weight: 600; color: var(--text-primary); }
+
+/* 分页控件 */
+.pagination { display: flex; align-items: center; gap: 6px; }
+.pg-btn {
+  width: 28px; height: 28px; border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+  background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.15s;
+}
+.pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pg-info { font-size: 13px; color: var(--text-muted); min-width: 52px; text-align: center; }
 
 @media (max-width: 900px) {
   .pg-hd { padding: 16px 16px 0; }
