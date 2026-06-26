@@ -24,14 +24,11 @@ public class PipelineTask {
     @TableField("current_stage")
     private String currentStage;
 
-    @TableField("message")
+    @TableField("stage_message")
     private String message;
 
     @TableField("log_file")
     private String logFile;
-
-    @TableField("local_dir")
-    private String localDir;
 
     @TableField("submitted_at")
     private LocalDateTime submittedAt;

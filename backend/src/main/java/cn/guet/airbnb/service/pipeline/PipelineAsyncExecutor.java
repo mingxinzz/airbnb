@@ -19,17 +19,11 @@ public class PipelineAsyncExecutor {
 
     private final SshRemoteService sshRemoteService;
     private final PipelineTaskMapper pipelineTaskMapper;
-    private final PipelineTaskLogHelper pipelineTaskLogHelper;
 
     @Async("pipelineExecutor")
     public void startRemotePipeline(String taskId) {
         try {
             sshRemoteService.startPipelineScript(taskId);
-            pipelineTaskLogHelper.addLog(taskId,
-                    PipelineConstants.LogLevel.INFO,
-                    PipelineConstants.TaskStage.UPLOAD_RAW_TO_HDFS,
-                    PipelineConstants.TaskStatus.RUNNING,
-                    "已远程启动分析脚本，后续阶段由 run_airbnb_pipeline.sh 更新");
         } catch (Exception e) {
             log.error("远程启动 Pipeline 失败, taskId={}", taskId, e);
             PipelineTask task = getTask(taskId);
@@ -39,11 +33,6 @@ public class PipelineAsyncExecutor {
             task.setErrorMessage(e.getMessage());
             task.setEndTime(LocalDateTime.now());
             pipelineTaskMapper.updateById(task);
-            pipelineTaskLogHelper.addLog(taskId,
-                    PipelineConstants.LogLevel.ERROR,
-                    PipelineConstants.TaskStage.FAILED,
-                    PipelineConstants.TaskStatus.FAILED,
-                    "远程启动分析脚本失败: " + e.getMessage());
         }
     }
 
