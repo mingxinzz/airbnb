@@ -58,7 +58,10 @@
 
       <!-- Log Panel -->
       <div class="panel" style="flex:1">
-        <div class="panel-hd"><span class="panel-title">任务日志</span></div>
+        <div class="panel-hd">
+          <span class="panel-title">任务日志</span>
+          <button class="log-clear-btn" @click="clearLogs" :disabled="!logs.length">清空</button>
+        </div>
         <div style="padding:0 16px 12px;flex:1;display:flex;min-height:0">
           <div class="log-box" ref="logPanelRef">
             <div v-if="!logs.length" class="log-empty">等待任务启动...</div>
@@ -81,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onUnmounted } from 'vue'
+import { ref, reactive, computed, onUnmounted, watch, nextTick } from 'vue'
 import ConclusionBox from '../components/ConclusionBox.vue'
 import { uploadAndStart, getTaskStatus, getTaskLogs } from '../api/pipeline'
 
@@ -186,11 +189,6 @@ function addLog(level, message) {
   const now = new Date()
   const time = now.toTimeString().slice(0, 8)
   logs.value.push({ logTime: time, level, message })
-  if (logPanelRef.value) {
-    setTimeout(() => {
-      logPanelRef.value.scrollTop = logPanelRef.value.scrollHeight
-    }, 50)
-  }
 }
 
 async function startPipeline() {
@@ -264,6 +262,22 @@ function refreshStatus() {
     addLog('INFO', '尚未创建任务')
   }
 }
+
+function clearLogs() {
+  logs.value = []
+}
+
+// 日志变化时自动滚动到底部
+watch(
+  () => logs.value.length,
+  () => {
+    nextTick(() => {
+      if (logPanelRef.value) {
+        logPanelRef.value.scrollTop = logPanelRef.value.scrollHeight
+      }
+    })
+  }
+)
 
 onUnmounted(stopPolling)
 </script>
@@ -371,6 +385,17 @@ onUnmounted(stopPolling)
 .log-e { color: var(--accent); }
 .log-box::-webkit-scrollbar { width: 4px; }
 .log-box::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+
+.log-clear-btn {
+  font-size: 11px; font-weight: 500; color: var(--text-muted);
+  background: transparent; border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); padding: 3px 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.log-clear-btn:hover:not(:disabled) {
+  border-color: var(--accent); color: var(--accent);
+}
+.log-clear-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 @media (max-width: 900px) {
   .pg-hd { padding: 16px 16px 0; }
