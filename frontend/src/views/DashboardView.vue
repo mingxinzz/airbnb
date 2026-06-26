@@ -31,11 +31,13 @@
       </div>
 
       <!-- Conclusion -->
-      <ConclusionBox title="分析结论摘要">
-        <strong>供给格局：</strong>Dorchester、Jamaica Plain、South End 为房源最集中三大区域，合计占比超 25%；<strong>Entire home/apt</strong> 是主流房型，占比超 60%。<br />
-        <strong>价格特征：</strong>Downtown、Back Bay 均价超 $200，高低区域价差可达 2~3 倍。<br />
-        <strong>评论活跃度：</strong>评论呈明显季节性波动，夏季（6-9 月）为高峰，与旅游旺季吻合。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -50,6 +52,7 @@ import { getRegionCount, getRoomTypeRatio } from '../api/listing'
 import { getMonthlyReviewTrend } from '../api/review'
 import { tooltipConfig, gridConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS, paletteColor } from '../utils/chart-theme'
 import { formatNumber, formatShortNum, formatPrice } from '../utils/helpers'
+import { getDashboardSummary } from '../api/summary'
 
 const fmtNum = formatNumber
 const fmtShort = formatShortNum
@@ -60,6 +63,11 @@ const overview = ref({})
 const regionData = ref([])
 const roomTypeData = ref([])
 const reviewTrendData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 
 const regionChartOption = computed(() => ({
   tooltip: tooltipConfig(),
@@ -160,7 +168,23 @@ async function loadData() {
   }
 }
 
-onMounted(loadData)
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getDashboardSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadData()
+  loadSummary()
+})
 </script>
 
 <style scoped>

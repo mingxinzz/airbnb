@@ -13,10 +13,13 @@
           <ChartPanel title="日历价格波动趋势（月均）" :option="trendChartOption" />
         </div>
       </div>
-      <ConclusionBox title="分析结论">
-        <strong>价格与评论：</strong>评论集中在 $50~$200 区间。高价房源（>$300）评论普遍较少，但非严格负相关。<br />
-        <strong>日历波动：</strong>波士顿民宿价格呈显著季节性波动。夏季（6-9 月）上浮约 25%-40%，9 月达峰值；冬季（12-2 月）回落谷底。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -26,10 +29,16 @@ import { ref, computed, onMounted } from 'vue'
 import ChartPanel from '../components/ChartPanel.vue'
 import ConclusionBox from '../components/ConclusionBox.vue'
 import { getPriceReviewScatter, getPriceTrend } from '../api/price'
+import { getHeatTrendSummary } from '../api/summary'
 import { tooltipConfig, gridConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS } from '../utils/chart-theme'
 
 const scatterData = ref([])
 const trendData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 
 const scatterChartOption = computed(() => ({
   tooltip: {
@@ -112,6 +121,19 @@ const trendChartOption = computed(() => ({
   }]
 }))
 
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getHeatTrendSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const [scatterRes, trendRes] = await Promise.all([
@@ -123,6 +145,7 @@ onMounted(async () => {
   } catch (e) {
     console.error('Failed to load price dynamics data:', e)
   }
+  loadSummary()
 })
 </script>
 

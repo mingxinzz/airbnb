@@ -14,10 +14,13 @@
           <ChartPanel title="房东房源数量 Top 15" :option="hostChartOption" />
         </div>
       </div>
-      <ConclusionBox title="分析结论">
-        <strong>房型结构：</strong>Entire home/apt 占绝对主导（62.4%），Private room 占 35.5%，Shared room 仅 2.1%。波士顿以整租房源为主，适合家庭和商务出行。<br />
-        <strong>房东格局：</strong>Top 15 合计持有 520 套房源，排名第一持有 105 套，存在明显职业化房东群体。约 70% 房东仅持有 1 套，呈典型长尾分布。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -27,10 +30,16 @@ import { ref, computed, onMounted } from 'vue'
 import ChartPanel from '../components/ChartPanel.vue'
 import ConclusionBox from '../components/ConclusionBox.vue'
 import { getRoomTypeRatio, getHostTopN } from '../api/listing'
+import { getRoomHostSummary } from '../api/summary'
 import { tooltipConfig, gridConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS } from '../utils/chart-theme'
 
 const roomTypeData = ref([])
 const hostData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 
 const pieChartOption = computed(() => ({
   tooltip: tooltipConfig(),
@@ -114,6 +123,19 @@ const hostChartOption = computed(() => {
   }
 })
 
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getRoomHostSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const [roomRes, hostRes] = await Promise.all([
@@ -125,6 +147,7 @@ onMounted(async () => {
   } catch (e) {
     console.error('Failed to load structure data:', e)
   }
+  loadSummary()
 })
 </script>
 

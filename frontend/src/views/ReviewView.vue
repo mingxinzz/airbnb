@@ -19,9 +19,13 @@
         <div class="chart-box" ref="chartRef"></div>
       </div>
 
-      <ConclusionBox title="分析结论">
-        评论活跃度自 2009 年以来持续上升，2015-2016 年达到峰值。每年夏季（6-9 月）为评论高峰，月均超 2,000 条，与波士顿旅游旺季高度吻合；冬季（12-2 月）活跃度明显下降。整体趋势表明 Airbnb 在波士顿的使用率和用户参与度逐年增长。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -32,11 +36,17 @@ import * as echarts from 'echarts'
 import KpiCard from '../components/KpiCard.vue'
 import ConclusionBox from '../components/ConclusionBox.vue'
 import { getMonthlyReviewTrend } from '../api/review'
+import { getReviewSummary } from '../api/summary'
 import { tooltipConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS } from '../utils/chart-theme'
 import { formatShortNum } from '../utils/helpers'
 
 const fmtShort = formatShortNum
 const reviewData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 const chartRef = ref(null)
 let chartInstance = null
 
@@ -95,6 +105,19 @@ function resizeChart() {
 
 let resizeObserver = null
 
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getReviewSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     reviewData.value = await getMonthlyReviewTrend() || []
@@ -105,6 +128,7 @@ onMounted(async () => {
   resizeObserver = new ResizeObserver(resizeChart)
   if (chartRef.value) resizeObserver.observe(chartRef.value)
   window.addEventListener('resize', resizeChart)
+  loadSummary()
 })
 
 watch(chartOption, () => setChart(), { deep: true })

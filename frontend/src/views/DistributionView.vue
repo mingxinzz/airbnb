@@ -33,11 +33,13 @@
           </div>
         </div>
       </div>
-      <ConclusionBox title="分析结论">
-        <strong>高供给区域：</strong>Dorchester（358 套）、Jamaica Plain（287 套）、South End（241 套）最集中，合计占比约 24.7%。<br />
-        <strong>中等供给：</strong>Back Bay、Fenway、Roxbury、East Boston 在 150~200 套之间。<br />
-        <strong>低供给区域：</strong>Longwood（42 套）、Downtown/ Mattapan（52 套）房源较少，供给呈"东北-西南"带状聚集格局。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -50,9 +52,15 @@ import ConclusionBox from '../components/ConclusionBox.vue'
 import { getRegionCount } from '../api/listing'
 import { tooltipConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS, paletteColor } from '../utils/chart-theme'
 import { formatNumber } from '../utils/helpers'
+import { getRegionDistributionSummary } from '../api/summary'
 
 const fmtNum = formatNumber
 const regionData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 
 const sortedData = computed(() => [...regionData.value].sort((a, b) => b.houseCount - a.houseCount))
 
@@ -108,12 +116,26 @@ const barChartOption = computed(() => ({
   }]
 }))
 
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getRegionDistributionSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     regionData.value = await getRegionCount() || []
   } catch (e) {
     console.error('Failed to load region data:', e)
   }
+  loadSummary()
 })
 </script>
 

@@ -22,11 +22,13 @@
         </div>
       </div>
 
-      <ConclusionBox title="分析结论">
-        <strong>高价层级：</strong>Downtown ($245)、Back Bay ($215)、Beacon Hill ($198) 构成核心高价区，区位优势和城市中心属性是溢价主因。<br />
-        <strong>中价层级：</strong>South End、Fenway、North End 均价 $150~$180，性价比较高。<br />
-        <strong>低价层级：</strong>Hyde Park ($85)、Mattapan ($92) 等外围区域价格显著偏低，高温差达 2~3 倍。
-      </ConclusionBox>
+      <ConclusionBox
+        :panel-title="summaryData?.panelTitle"
+        :summary-items="summaryData?.summaryItems || []"
+        :loading="summaryLoading"
+        :error="summaryError"
+        :generated-at="summaryData?.generatedAt"
+      />
     </div>
   </div>
 </template>
@@ -37,11 +39,17 @@ import KpiCard from '../components/KpiCard.vue'
 import ChartPanel from '../components/ChartPanel.vue'
 import ConclusionBox from '../components/ConclusionBox.vue'
 import { getRegionAvgPrice } from '../api/price'
+import { getRegionLevelSummary } from '../api/summary'
 import { tooltipConfig, axisLabelStyle, axisLineStyle, splitLineStyle, CHART_COLORS } from '../utils/chart-theme'
 import { formatPrice } from '../utils/helpers'
 
 const fmtPrice = formatPrice
 const priceData = ref([])
+
+// AI 结论
+const summaryLoading = ref(false)
+const summaryError = ref(false)
+const summaryData = ref(null)
 
 const sortedByAvg = computed(() => [...priceData.value].sort((a, b) => b.avgPrice - a.avgPrice))
 
@@ -139,12 +147,26 @@ const lineChartOption = computed(() => {
   }
 })
 
+async function loadSummary() {
+  summaryLoading.value = true
+  summaryError.value = false
+  try {
+    summaryData.value = await getRegionLevelSummary()
+  } catch (e) {
+    console.error('Failed to load summary:', e)
+    summaryError.value = true
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     priceData.value = await getRegionAvgPrice() || []
   } catch (e) {
     console.error('Failed to load price data:', e)
   }
+  loadSummary()
 })
 </script>
 
